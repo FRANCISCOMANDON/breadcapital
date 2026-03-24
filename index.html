@@ -1,159 +1,151 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>BreadCapital</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panadería Digital</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-button-color: #e67e22;
+            --tg-theme-button-text-color: #ffffff;
+            --tg-theme-text-color: #2c3e50;
+        }
 
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-  <!-- ✅ SUPABASE CORRECTO -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        header {
+            background: var(--tg-theme-button-color);
+            color: white;
+            width: 100%;
+            padding: 20px 0;
+            text-align: center;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+        }
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0f172a">
+        .container {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 90%;
+        }
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #0f172a;
-      color: white;
-    }
+        .product-card {
+            background: #fdf2e9;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
 
-    .container {
-      padding: 20px;
-    }
+        .product-card:active { transform: scale(0.95); }
 
-    .card {
-      background: #1e293b;
-      padding: 15px;
-      border-radius: 15px;
-      margin-bottom: 15px;
-    }
+        .product-card i { font-size: 40px; color: #d35400; }
 
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 10px;
-      background: #f59e0b;
-      color: black;
-      font-weight: bold;
-    }
-  </style>
+        .price { font-weight: bold; color: #e67e22; display: block; margin: 10px 0; }
+
+        .btn-add {
+            background: var(--tg-theme-button-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        #cart-status {
+            position: fixed;
+            bottom: 20px;
+            background: #27ae60;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            display: none;
+        }
+    </style>
 </head>
-
 <body>
 
+<header>
+    <h1>🍞 Panadería Central</h1>
+    <p>Bienvenido, <span id="user-name">Invitado</span></p>
+</header>
+
 <div class="container">
-  <h2>🥖 BreadCapital</h2>
-
-  <div class="card">
-    <p>Producción: <b id="rate">0.0023 kg/s</b></p>
-    <p>Pan acumulado:</p>
-    <h2 id="balance">0.00</h2>
-  </div>
-
-  <div class="card">
-    <button onclick="vender()">Vender Pan</button>
-    <button onclick="mejorar()">Mejorar Horno</button>
-  </div>
+    <div class="product-card">
+        <i class="fas fa-bread-slice"></i>
+        <h3>Croissant</h3>
+        <span class="price">$1.50</span>
+        <button class="btn-add" onclick="addToCart('Croissant', 1.50)">Agregar</button>
+    </div>
+    <div class="product-card">
+        <i class="fas fa-stroopwafel"></i>
+        <h3>Baguette</h3>
+        <span class="price">$2.00</span>
+        <button class="btn-add" onclick="addToCart('Baguette', 2.00)">Agregar</button>
+    </div>
+    <div class="product-card">
+        <i class="fas fa-cookie"></i>
+        <h3>Galleta XL</h3>
+        <span class="price">$0.75</span>
+        <button class="btn-add" onclick="addToCart('Galleta XL', 0.75)">Agregar</button>
+    </div>
+    <div class="product-card">
+        <i class="fas fa-birthday-cake"></i>
+        <h3>Muffin</h3>
+        <span class="price">$2.50</span>
+        <button class="btn-add" onclick="addToCart('Muffin', 2.50)">Agregar</button>
+    </div>
 </div>
 
+<div id="cart-status"></div>
+
 <script>
-  // 🔥 CONFIG
-  const SUPABASE_URL = "https://hyrcvrmkyrzsucegmtxs.supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5cmN2cm1reXJ6c3VjZWdtdHhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzODE3MTUsImV4cCI6MjA4OTk1NzcxNX0.LeKlQbZBX5DcnRL1C6l-2ph9vYHbKarmKVgVkMtzOnM";
+    let tg = window.Telegram.WebApp;
+    let cart = [];
 
-  const { createClient } = supabase;
-  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  // TELEGRAM
-  const tg = window.Telegram.WebApp;
-  tg.ready();
-  tg.expand();
-
-  const user = tg.initDataUnsafe.user;
-  const userId = user ? user.id.toString() : "demo_user";
-
-  let balance = 0;
-  let rate = 0.0023;
-  let lastUpdate = Date.now();
-
-  async function cargarDatos() {
-    try {
-      let { data } = await db
-        .from('users')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (data) {
-        balance = parseFloat(data.balance);
-        rate = parseFloat(data.rate);
-        lastUpdate = parseInt(data.last_update);
-      } else {
-        await db.from('users').insert([
-          {
-            user_id: userId,
-            balance: 0,
-            rate: 0.0023,
-            last_update: Date.now()
-          }
-        ]);
-      }
-
-      calcularOffline();
-      actualizarUI();
-
-    } catch (err) {
-      console.log("Error:", err);
+    tg.expand(); // Expande la app a pantalla completa
+    
+    // Mostrar nombre del usuario de Telegram
+    if (tg.initDataUnsafe.user) {
+        document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
     }
-  }
 
-  function calcularOffline() {
-    let ahora = Date.now();
-    let segundos = (ahora - lastUpdate) / 1000;
-    balance += segundos * rate;
-    lastUpdate = ahora;
-  }
+    function addToCart(name, price) {
+        cart.push({name, price});
+        updateMainButton();
+        
+        const status = document.getElementById('cart-status');
+        status.style.display = 'block';
+        status.innerText = `Agregado: ${name}`;
+        setTimeout(() => { status.style.display = 'none'; }, 2000);
+    }
 
-  function actualizarUI() {
-    document.getElementById("balance").innerText = balance.toFixed(2);
-    document.getElementById("rate").innerText = rate.toFixed(4) + " kg/s";
-  }
+    function updateMainButton() {
+        const total = cart.reduce((sum, item) => sum + item.price, 0);
+        tg.MainButton.text = `PAGAR $${total.toFixed(2)}`;
+        tg.MainButton.show();
+    }
 
-  async function guardarDatos() {
-    await db
-      .from('users')
-      .update({
-        balance: balance,
-        rate: rate,
-        last_update: lastUpdate
-      })
-      .eq('user_id', userId);
-  }
-
-  function loop() {
-    balance += rate;
-    actualizarUI();
-    guardarDatos();
-  }
-
-  setInterval(loop, 1000);
-
-  function vender() {
-    balance = 0;
-    guardarDatos();
-  }
-
-  function mejorar() {
-    rate += 0.001;
-    guardarDatos();
-  }
-
-  cargarDatos();
+    // Evento al presionar el botón principal de Telegram
+    tg.onEvent('mainButtonClicked', function() {
+        tg.sendData(JSON.stringify(cart)); // Envía el pedido al bot
+        tg.close();
+    });
 </script>
 
 </body>
