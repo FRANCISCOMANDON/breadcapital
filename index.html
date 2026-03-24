@@ -5,6 +5,7 @@
   <title>BreadCapital</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0f172a">
@@ -59,9 +60,49 @@
 </div>
 
 <script>
-  let balance = parseFloat(localStorage.getItem("balance")) || 0;
-  let rate = parseFloat(localStorage.getItem("rate")) || 0.0023;
-  let lastUpdate = parseInt(localStorage.getItem("lastUpdate")) || Date.now();
+  // 🔥 TUS DATOS (YA CONFIGURADOS)
+  const SUPABASE_URL = "https://hyrcvrmkyrzsucegmtxs.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5cmN2cm1reXJ6c3VjZWdtdHhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzODE3MTUsImV4cCI6MjA4OTk1NzcxNX0.LeKlQbZBX5DcnRL1C6l-2ph9vYHbKarmKVgVkMtzOnM";
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // TELEGRAM
+  const tg = Telegram.WebApp;
+  tg.ready();
+  tg.expand();
+
+  const user = tg.initDataUnsafe.user;
+  const userId = user ? user.id.toString() : "demo_user";
+
+  let balance = 0;
+  let rate = 0.0023;
+  let lastUpdate = Date.now();
+
+  async function cargarDatos() {
+    let { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (data) {
+      balance = parseFloat(data.balance);
+      rate = parseFloat(data.rate);
+      lastUpdate = parseInt(data.last_update);
+    } else {
+      await supabase.from('users').insert([
+        {
+          user_id: userId,
+          balance: 0,
+          rate: 0.0023,
+          last_update: Date.now()
+        }
+      ]);
+    }
+
+    calcularOffline();
+    actualizarUI();
+  }
 
   function calcularOffline() {
     let ahora = Date.now();
@@ -70,37 +111,42 @@
     lastUpdate = ahora;
   }
 
-  function actualizar() {
-    balance += rate;
+  function actualizarUI() {
     document.getElementById("balance").innerText = balance.toFixed(2);
-
-    // Guardar datos
-    localStorage.setItem("balance", balance);
-    localStorage.setItem("rate", rate);
-    localStorage.setItem("lastUpdate", lastUpdate);
+    document.getElementById("rate").innerText = rate.toFixed(4) + " kg/s";
   }
+
+  async function guardarDatos() {
+    await supabase
+      .from('users')
+      .update({
+        balance: balance,
+        rate: rate,
+        last_update: lastUpdate
+      })
+      .eq('user_id', userId);
+  }
+
+  function loop() {
+    balance += rate;
+    actualizarUI();
+    guardarDatos();
+  }
+
+  setInterval(loop, 1000);
 
   function vender() {
     alert("Pan vendido (simulado)");
     balance = 0;
-    localStorage.setItem("balance", balance);
+    guardarDatos();
   }
 
   function mejorar() {
     rate += 0.001;
-    document.getElementById("rate").innerText = rate.toFixed(4) + " kg/s";
-    localStorage.setItem("rate", rate);
+    guardarDatos();
   }
 
-  // Cargar datos al iniciar
-  calcularOffline();
-  document.getElementById("balance").innerText = balance.toFixed(2);
-  document.getElementById("rate").innerText = rate.toFixed(4) + " kg/s";
-
-  setInterval(actualizar, 1000);
-
-  Telegram.WebApp.ready();
-  Telegram.WebApp.expand();
+  cargarDatos();
 </script>
 
 </body>
