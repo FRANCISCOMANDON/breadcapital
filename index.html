@@ -3,7 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <title>BreadCapital</title>
+
+  <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Optimización móvil -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f172a">
 
   <style>
     body {
@@ -15,6 +21,10 @@
 
     .container {
       padding: 20px;
+    }
+
+    h2 {
+      margin-bottom: 10px;
     }
 
     .card {
@@ -33,6 +43,11 @@
       background: #f59e0b;
       color: black;
       font-weight: bold;
+      font-size: 16px;
+    }
+
+    button:active {
+      transform: scale(0.98);
     }
   </style>
 </head>
@@ -46,7 +61,7 @@
   <div class="card">
     <p>Producción: <b id="rate">0.0023 kg/s</b></p>
     <p>Pan acumulado:</p>
-    <h2 id="balance">0</h2>
+    <h2 id="balance">0.00</h2>
   </div>
 
   <div class="card">
@@ -77,7 +92,11 @@
     document.getElementById("rate").innerText = rate.toFixed(4) + " kg/s";
   }
 
+  // Telegram PRO settings
   Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+  Telegram.WebApp.setHeaderColor("#0f172a");
+  Telegram.WebApp.setBackgroundColor("#0f172a");
 </script>
 
 </body>
