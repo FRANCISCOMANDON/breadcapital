@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>BreadCapital</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 15px;
+      border-radius: 15px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 10px;
+      background: #f59e0b;
+      color: black;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h2>🥖 BreadCapital</h2>
+
+  <div class="card">
+    <p>Producción: <b id="rate">0.0023 kg/s</b></p>
+    <p>Pan acumulado:</p>
+    <h2 id="balance">0</h2>
+  </div>
+
+  <div class="card">
+    <button onclick="vender()">Vender Pan</button>
+    <button onclick="mejorar()">Mejorar Horno</button>
+  </div>
+
+</div>
+
+<script>
+  let balance = 0;
+  let rate = 0.0023;
+
+  function actualizar() {
+    balance += rate;
+    document.getElementById("balance").innerText = balance.toFixed(2);
+  }
+
+  setInterval(actualizar, 1000);
+
+  function vender() {
+    alert("Pan vendido (simulado)");
+    balance = 0;
+  }
+
+  function mejorar() {
+    rate += 0.001;
+    document.getElementById("rate").innerText = rate.toFixed(4) + " kg/s";
+  }
+
+  Telegram.WebApp.ready();
+</script>
+
+</body>
+</html>
