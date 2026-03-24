@@ -4,10 +4,8 @@
   <meta charset="UTF-8">
   <title>BreadCapital</title>
 
-  <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Optimización móvil -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0f172a">
 
@@ -21,10 +19,6 @@
 
     .container {
       padding: 20px;
-    }
-
-    h2 {
-      margin-bottom: 10px;
     }
 
     .card {
@@ -43,11 +37,6 @@
       background: #f59e0b;
       color: black;
       font-weight: bold;
-      font-size: 16px;
-    }
-
-    button:active {
-      transform: scale(0.98);
     }
   </style>
 </head>
@@ -55,7 +44,6 @@
 <body>
 
 <div class="container">
-
   <h2>🥖 BreadCapital</h2>
 
   <div class="card">
@@ -68,35 +56,51 @@
     <button onclick="vender()">Vender Pan</button>
     <button onclick="mejorar()">Mejorar Horno</button>
   </div>
-
 </div>
 
 <script>
-  let balance = 0;
-  let rate = 0.0023;
+  let balance = parseFloat(localStorage.getItem("balance")) || 0;
+  let rate = parseFloat(localStorage.getItem("rate")) || 0.0023;
+  let lastUpdate = parseInt(localStorage.getItem("lastUpdate")) || Date.now();
+
+  function calcularOffline() {
+    let ahora = Date.now();
+    let segundos = (ahora - lastUpdate) / 1000;
+    balance += segundos * rate;
+    lastUpdate = ahora;
+  }
 
   function actualizar() {
     balance += rate;
     document.getElementById("balance").innerText = balance.toFixed(2);
-  }
 
-  setInterval(actualizar, 1000);
+    // Guardar datos
+    localStorage.setItem("balance", balance);
+    localStorage.setItem("rate", rate);
+    localStorage.setItem("lastUpdate", lastUpdate);
+  }
 
   function vender() {
     alert("Pan vendido (simulado)");
     balance = 0;
+    localStorage.setItem("balance", balance);
   }
 
   function mejorar() {
     rate += 0.001;
     document.getElementById("rate").innerText = rate.toFixed(4) + " kg/s";
+    localStorage.setItem("rate", rate);
   }
 
-  // Telegram PRO settings
+  // Cargar datos al iniciar
+  calcularOffline();
+  document.getElementById("balance").innerText = balance.toFixed(2);
+  document.getElementById("rate").innerText = rate.toFixed(4) + " kg/s";
+
+  setInterval(actualizar, 1000);
+
   Telegram.WebApp.ready();
   Telegram.WebApp.expand();
-  Telegram.WebApp.setHeaderColor("#0f172a");
-  Telegram.WebApp.setBackgroundColor("#0f172a");
 </script>
 
 </body>
