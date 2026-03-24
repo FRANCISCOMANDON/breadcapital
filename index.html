@@ -5,7 +5,9 @@
   <title>BreadCapital</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <!-- ✅ SUPABASE CORRECTO -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0f172a">
@@ -60,14 +62,15 @@
 </div>
 
 <script>
-  // 🔥 TUS DATOS (YA CONFIGURADOS)
+  // 🔥 CONFIG
   const SUPABASE_URL = "https://hyrcvrmkyrzsucegmtxs.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5cmN2cm1reXJ6c3VjZWdtdHhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzODE3MTUsImV4cCI6MjA4OTk1NzcxNX0.LeKlQbZBX5DcnRL1C6l-2ph9vYHbKarmKVgVkMtzOnM";
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // TELEGRAM
-  const tg = Telegram.WebApp;
+  const tg = window.Telegram.WebApp;
   tg.ready();
   tg.expand();
 
@@ -79,29 +82,34 @@
   let lastUpdate = Date.now();
 
   async function cargarDatos() {
-    let { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    try {
+      let { data } = await db
+        .from('users')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
 
-    if (data) {
-      balance = parseFloat(data.balance);
-      rate = parseFloat(data.rate);
-      lastUpdate = parseInt(data.last_update);
-    } else {
-      await supabase.from('users').insert([
-        {
-          user_id: userId,
-          balance: 0,
-          rate: 0.0023,
-          last_update: Date.now()
-        }
-      ]);
+      if (data) {
+        balance = parseFloat(data.balance);
+        rate = parseFloat(data.rate);
+        lastUpdate = parseInt(data.last_update);
+      } else {
+        await db.from('users').insert([
+          {
+            user_id: userId,
+            balance: 0,
+            rate: 0.0023,
+            last_update: Date.now()
+          }
+        ]);
+      }
+
+      calcularOffline();
+      actualizarUI();
+
+    } catch (err) {
+      console.log("Error:", err);
     }
-
-    calcularOffline();
-    actualizarUI();
   }
 
   function calcularOffline() {
@@ -117,7 +125,7 @@
   }
 
   async function guardarDatos() {
-    await supabase
+    await db
       .from('users')
       .update({
         balance: balance,
@@ -136,7 +144,6 @@
   setInterval(loop, 1000);
 
   function vender() {
-    alert("Pan vendido (simulado)");
     balance = 0;
     guardarDatos();
   }
